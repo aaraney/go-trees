@@ -10,64 +10,43 @@ type Node[T comparable] struct {
 	Next  *Node[T]
 }
 
+func (n Node[T]) String() string {
+	return fmt.Sprintf("Value: %#v Next: %#v", n.Value, n.Next)
+}
+
 func (n *Node[T]) prepend(value T) *Node[T] {
 	return &Node[T]{Value: value, Next: n}
 }
 
 // cant be in-place because of how go represents pointers
 func (n *Node[T]) delete(value T) (*Node[T], error) {
-	// deleting empty
-	if n == nil {
-		return nil, errors.New("empty list")
-	}
+	var previous *Node[T]
+	current := n
 
-	// delete first
-	if n.Value == value {
-		// empty list
-		if n.Next == nil {
-			return nil, nil
-		}
-
-		*n = *n.Next
-		return n, nil
-	}
-
-	cursor := n
-	// peak ahead to find value
 	for {
-		next, err := cursor.peek()
-		// could not delete
-		// next is end
-		if err != nil {
-			return n, err
+		if current == nil {
+			return n, fmt.Errorf("value, %v, not in list", value)
 		}
 
-		// did not find value; advance cursor
-		if next.Value != value {
-			cursor = next
-			continue
-		}
+		// found value
+		if current.Value == value {
+			// case when `current` is the fist item in list
+			if previous == nil {
+				root := current.Next
+				current.Next = nil
+				return root, nil
+			}
 
-		// found case
-		nextNext, err := next.peek()
-
-		// next next is the end of list
-		//
-		// value = 2
-		//   [ 1 ] -> [ 2 ] -> [ \ ]
-		// (cursor)  (next)  (next next)
-		if err != nil {
-			// cursor is new end of list
-			cursor.Next = nil
+			previous.Next = current.Next
+			// drop pointer from deleted item to it's next element
+			current.Next = nil
 			return n, nil
 		}
 
-		cursor.Next = nextNext
-		// drop pointer
-		next.Next = nil
-		return n, nil
+		// next
+		previous = current
+		current = current.Next
 	}
-
 }
 
 func (n *Node[T]) get(value T) (*Node[T], error) {
