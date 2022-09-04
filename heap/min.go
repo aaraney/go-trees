@@ -14,8 +14,19 @@ func (h MinHeap[T]) BuildHeap() {
 	}
 }
 
-// return min, parent tuple
-func (h MinHeap[T]) heapify(parentIdx int) (int, int) {
+func (h MinHeap[T]) HeapifyUp(idx int) {
+	parent := h.Parent(idx)
+	if parent < 0 {
+		return
+	}
+
+	if idx < len(h) && h[idx] < h[parent] {
+		h[idx], h[parent] = h[parent], h[idx]
+		h.HeapifyUp(parent)
+	}
+}
+
+func (h MinHeap[T]) HeapifyDown(parentIdx int) {
 	left := h.LeftChild(parentIdx)
 	right := h.RightChild(parentIdx)
 
@@ -31,29 +42,11 @@ func (h MinHeap[T]) heapify(parentIdx int) (int, int) {
 
 	// parent is min
 	if min == parentIdx {
-		return parentIdx, parentIdx
+		return
 	}
 
 	h[min], h[parentIdx] = h[parentIdx], h[min]
-	return min, parentIdx
-}
-
-func (h MinHeap[T]) HeapifyUp(parentIdx int) {
-	min, parent := h.heapify(parentIdx)
-	grand_parent := h.Parent(parent)
-	if min == parent || grand_parent < 0 {
-		return
-	}
-	h.HeapifyUp(grand_parent)
-}
-
-func (h MinHeap[T]) HeapifyDown(parentIdx int) {
-	min, parent := h.heapify(parentIdx)
-	if min == parent {
-		return
-	}
 	h.HeapifyDown(min)
-
 }
 
 // idx: 0 1 2 3 4 5 6
@@ -97,5 +90,5 @@ func (h *MinHeap[T]) Pop() (T, error) {
 
 func (h *MinHeap[T]) Insert(element T) {
 	*h = append(*h, element)
-	h.HeapifyUp(h.lastParent())
+	h.HeapifyUp(len(*h) - 1)
 }
